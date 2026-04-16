@@ -17,32 +17,28 @@ tas
 ; call r 0x2f0
 jsr.l consoleInit
 ; push2 imm r 0xf0
-pea.w 10240
+pea.w 16400
+; push2 imm r 0xf0
+pea.w 0
 ; call r 0x2f0
-jsr.l setbgcolor
-; add sp, #2
-pla
+jsr.l setColor
+; add sp, #4
+tsa
+clc
+adc #4
+tas
 __local_0:
-; gtst inv 1 t 0 v 240 r 240 ind 240
+; gtst inv 1 t 0 v 240 r 280 ind 280
 ; uncond jump: nop
 ; gtst finished; t 0
 ; call r 0x2f0
 jsr.l WaitVBL
-; gjmp_addr 240 at 346
+; gjmp_addr 280 at 386
 jmp.w __local_0
-; gsym_addr t 346 a 240 ind 385
-; gsym_addr t 0 a 417 ind 417
-; gsym_addr t 0 a 240 ind 447
-; load 0
-; type 0 reg 0xf0 extra 0x0
-; ld2 #0,tcc__r0
-lda.w #0
-sta.b tcc__r0
-; gjmp_addr 0 at 554
-jmp.w __local_1
-; gsym_addr t 554 a 0 ind 591
-__local_1:
-; gsym_addr t 554 a 621 ind 621
+; gsym_addr t 386 a 280 ind 425
+; gsym_addr t 0 a 457 ind 457
+; gsym_addr t 0 a 280 ind 487
+; gsym_addr t 0 a 517 ind 517
 ; add sp, #__main_locals
 .ifgr __main_locals 0
 tsa

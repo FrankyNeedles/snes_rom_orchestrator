@@ -1,15 +1,12 @@
 #include <snes.h>
 
-int main(void) {
-    // 1. Initialize the SNES console
+void main() {
     consoleInit();
 
-    // 2. Set the background color to a nice Blue (Hex 0x4000)
-    setbgcolor(RGB5(0,0,10));
+    // Set background color to purple-ish (RGB5: R=16, G=0, B=16)
+    setColor(0, RGB5(16, 0, 16));
 
-    // 3. Wait for the SNES to "Refresh" (Infinite Loop)
     while(1) {
         WaitVBL();
     }
-    return 0;
 }

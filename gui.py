@@ -1,59 +1,75 @@
 import tkinter as tk
-from tkinter import ttk, scrolledtext, messagebox
+from tkinter import messagebox
+import subprocess
 import os
-from dotenv import load_dotenv
-from bridge import generate_rom  # Bridge logic
-
-load_dotenv('.env')
+from phase3_langchain_bridge import Phase3Bridge
 
 class SNESOrchestratorGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Ultimate SNES ROM Orchestrator")
-        self.root.geometry("800x600")
+        self.root.geometry("600x450")
+        
+        # Build the AI machine once
+        self.bridge = Phase3Bridge()
 
-        # Mode toggle
-        tk.Label(root, text="Mode:").pack(pady=5)
+        # UI Layout
+        tk.Label(root, text="Describe your SNES Scene:", font=("Arial", 12, "bold")).pack(pady=10)
+        self.prompt_entry = tk.Text(root, height=5, width=60, font=("Consolas", 10))
+        self.prompt_entry.pack(pady=5)
+
         self.mode_var = tk.StringVar(value="video")
-        mode_frame = ttk.Frame(root)
-        mode_frame.pack()
-        tk.Radiobutton(mode_frame, text="Animated Video", variable=self.mode_var, value="video").pack(side=tk.LEFT)
-        tk.Radiobutton(mode_frame, text="Interactive Game", variable=self.mode_var, value="game").pack(side=tk.LEFT)
+        tk.Radiobutton(root, text="Animated Scene", variable=self.mode_var, value="video").pack()
+        tk.Radiobutton(root, text="Interactive Game", variable=self.mode_var, value="game").pack()
 
-        # Audio toggle
-        tk.Label(root, text="Audio:").pack(pady=5)
-        self.audio_var = tk.StringVar(value="bgm")
-        audio_frame = ttk.Frame(root)
-        audio_frame.pack()
-        tk.Radiobutton(audio_frame, text="Background Music", variable=self.audio_var, value="bgm").pack(side=tk.LEFT)
-        tk.Radiobutton(audio_frame, text="Sound Effects", variable=self.audio_var, value="sfx").pack(side=tk.LEFT)
+        self.btn_generate = tk.Button(root, text="GENERATE & RUN ROM", command=self.run_pipeline, 
+                                     bg="#2ecc71", fg="white", font=("Arial", 11, "bold"), height=2, width=25)
+        self.btn_generate.pack(pady=20)
 
-        # Prompt input
-        tk.Label(root, text="Natural Language Prompt:").pack(pady=5)
-        self.prompt_text = scrolledtext.ScrolledText(root, height=15, width=90, wrap=tk.WORD)
-        self.prompt_text.pack(pady=5)
+        self.status_label = tk.Label(root, text="Status: Ready", fg="#34495e")
+        self.status_label.pack()
 
-        # Generate button
-        ttk.Button(root, text="GENERATE ROM", command=self.on_generate).pack(pady=10)
-
-        ttk.Button(root, text="Clear", command=self.clear_prompt).pack()
-
-    def on_generate(self):
-        prompt = self.prompt_text.get(1.0, tk.END).strip()
+    def run_pipeline(self):
+        prompt = self.prompt_entry.get("1.0", "end-1c")
         mode = self.mode_var.get()
-        audio = self.audio_var.get()
-        if not prompt:
-            messagebox.showwarning("Warning", "Enter a prompt!")
+        
+        if not prompt.strip():
+            messagebox.showwarning("Empty Prompt", "Please tell the AI what to build!")
             return
-        try:
-            rom_path = generate_rom(prompt, mode, audio)
-            messagebox.showinfo("Success", f"ROM generated: {rom_path}\nLaunching emulator...")
-            os.system(f"../SNES-IDE/resources/bin/windows/bsnes/bsnes.exe {rom_path}")  # Adjust path/OS
-        except Exception as e:
-            messagebox.showerror("Error", str(e))
 
-    def clear_prompt(self):
-        self.prompt_text.delete(1.0, tk.END)
+        try:
+            self.status_label.config(text="Status: AI is coding...", fg="orange")
+            self.root.update()
+
+            # 1. AI Generates the C code
+            c_code = self.bridge.generate_blueprint(prompt, mode, "None")
+
+            # 2. Write code to file
+            self.bridge.write_to_engine(c_code)
+
+            # 3. Compile the ROM
+            self.status_label.config(text="Status: Baking ROM (Running Make)...", fg="blue")
+            self.root.update()
+            
+            # Note: We run make from inside the snes_rom_orchestrator folder
+            make_path = os.path.join("devkitsnes", "bin", "make.exe")
+            result = subprocess.run([make_path], capture_output=True, text=True)
+
+            if result.returncode == 0:
+                self.status_label.config(text="Status: SUCCESS!", fg="green")
+                # 4. Launch Emulator
+                emu_path = os.path.join("emulators", "snes9x.exe")
+                rom_path = os.path.join("build", "game.sfc")
+                if os.path.exists(rom_path):
+                    subprocess.Popen([emu_path, rom_path])
+            else:
+                # Show the exact line number where the AI messed up
+                messagebox.showerror("Compiler Error", result.stderr)
+                self.status_label.config(text="Status: Compiler Failed", fg="red")
+
+        except Exception as e:
+            messagebox.showerror("System Error", str(e))
+            self.status_label.config(text="Status: System Crash", fg="red")
 
 if __name__ == "__main__":
     root = tk.Tk()
