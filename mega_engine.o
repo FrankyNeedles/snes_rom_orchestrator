@@ -1,0 +1,68 @@
+.include "hdr.asm"
+.accu 16
+.index 16
+.16bit
+.define __main_locals 0
+
+.SECTION ".maintext_0x0" SUPERFREE
+
+main:
+; sub sp,#__main_locals
+.ifgr __main_locals 0
+tsa
+sec
+sbc #__main_locals
+tas
+.endif
+; call r 0x2f0
+jsr.l consoleInit
+; push2 imm r 0xf0
+pea.w 10240
+; call r 0x2f0
+jsr.l setbgcolor
+; add sp, #2
+pla
+__local_0:
+; gtst inv 1 t 0 v 240 r 240 ind 240
+; uncond jump: nop
+; gtst finished; t 0
+; call r 0x2f0
+jsr.l WaitVBL
+; gjmp_addr 240 at 346
+jmp.w __local_0
+; gsym_addr t 346 a 240 ind 385
+; gsym_addr t 0 a 417 ind 417
+; gsym_addr t 0 a 240 ind 447
+; load 0
+; type 0 reg 0xf0 extra 0x0
+; ld2 #0,tcc__r0
+lda.w #0
+sta.b tcc__r0
+; gjmp_addr 0 at 554
+jmp.w __local_1
+; gsym_addr t 554 a 0 ind 591
+__local_1:
+; gsym_addr t 554 a 621 ind 621
+; add sp, #__main_locals
+.ifgr __main_locals 0
+tsa
+clc
+adc #__main_locals
+tas
+.endif
+rtl
+.ENDS
+.RAMSECTION "ram{WLA_FILENAME}.data" APPENDTO "globram.data"
+
+.ENDS
+
+.SECTION "{WLA_FILENAME}.data" APPENDTO "glob.data"
+
+.ENDS
+
+.SECTION ".rodata" SUPERFREE
+
+.ENDS
+
+.RAMSECTION ".bss" BANK $7e SLOT 2
+.ENDS

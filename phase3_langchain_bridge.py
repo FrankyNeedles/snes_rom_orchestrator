@@ -1,10 +1,11 @@
 from langchain_community.chat_message_histories import ChatMessageHistory
-from langchain.memory import ConversationBufferMemory
+from langchain.memory import ConversationBufferMemory # type: ignore
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
 import os
 import json
+import re
 
 load_dotenv('.env')
 

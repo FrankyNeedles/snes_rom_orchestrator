@@ -1,0 +1,9 @@
+[objects]
+musicHiROM.obj
+res/soundbank.obj
+data.obj
+hdr.obj
+d:\a\pvsneslib\pvsneslib\pvsneslib\lib\HiROM_SlowROM/crt0_snes.obj
+d:\a\pvsneslib\pvsneslib\pvsneslib\lib\HiROM_SlowROM/libc.obj
+d:\a\pvsneslib\pvsneslib\pvsneslib\lib\HiROM_SlowROM/libm.obj
+d:\a\pvsneslib\pvsneslib\pvsneslib\lib\HiROM_SlowROM/libtcc.obj

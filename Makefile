@@ -1,34 +1,26 @@
-# pvsneslib standard Makefile template
-# Assumes toolchain from ../SNES-IDE/resources/bin/windows/ or set PATH
+# 1. SETUP PATHS
+DEV_KIT_DIR := ./devkitsnes
+LIB_DIR     := ./pvsneslib
 
-CC = wla-65816
-CFLAGS = -I ../SNES-IDE/resources/libs/pvsneslib/include -opt
-AS = ca65
-AFLAGS = -t 65816 -I ../SNES-IDE/resources/libs/pvsneslib/include
-LD = ld65
+# 2. TOOLS
+CC      := $(DEV_KIT_DIR)/bin/816-tcc.exe
+LD      := $(DEV_KIT_DIR)/bin/wlalink.exe
 
-TARGET = build/game.sfc
-ROMNAME = GAME
+# 3. FOLDERS
+INCLUDE := -I$(LIB_DIR)/include -I$(DEV_KIT_DIR)/include
+TARGET  := build/game.sfc
 
+# 4. THE RECIPE
 all: $(TARGET)
 
-$(TARGET): main.o data.o
-	$(LD) -C ../SNES-IDE/resources/libs/pvsneslib/config/lorom_32k_vertical.cfg -o $(TARGET) main.o data.o pvsneslib.lib
+$(TARGET): mega_engine.o
+	@echo "Linking SNES ROM..."
+	$(LD) -vr temp.link $(TARGET) $(LIB_DIR)/lib/pvsneslib.lib
 
-main.o: mega_engine.c
-	$(CC) $(CFLAGS) -c mega_engine.c -o main.o
-
-data.o: data.asm
-	$(AS) $(AFLAGS) data.asm -o data.o
-
-sixpack: data/
-	../SNES-IDE/resources/bin/windows/sixpack/sixpack -vlif data/ build/data/
+mega_engine.o: mega_engine.c
+	@echo "Compiling C code..."
+	$(CC) $(INCLUDE) -c mega_engine.c -o mega_engine.o
 
 clean:
-	rm -f *.o $(TARGET)
-
-run: $(TARGET)
-	../SNES-IDE/resources/bin/windows/bsnes/bsnes.exe $(TARGET)
-
-# Adjust paths for your OS (windows/linux/macos bins in SNES-IDE/resources/bin/)
-
+	@echo "Cleaning old files..."
+	-del /q *.o *.obj build\game.sfc 2>nul

@@ -1,0 +1,9 @@
+[objects]
+musicGreaterThan32k.obj
+res/soundbank.obj
+data.obj
+hdr.obj
+d:\a\pvsneslib\pvsneslib\pvsneslib\lib\LoROM_SlowROM/crt0_snes.obj
+d:\a\pvsneslib\pvsneslib\pvsneslib\lib\LoROM_SlowROM/libc.obj
+d:\a\pvsneslib\pvsneslib\pvsneslib\lib\LoROM_SlowROM/libm.obj
+d:\a\pvsneslib\pvsneslib\pvsneslib\lib\LoROM_SlowROM/libtcc.obj
