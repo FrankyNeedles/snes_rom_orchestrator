@@ -1,13 +1,11 @@
 import json
-import os
 import requests
 from asset_generator import SNESAssetGenerator
 from state_manager import StateManager
 
 class Orchestrator:
     """
-    The Boss: Routes user requests to Artist or Coder via Llama3.1.
-    Demands JSON.
+    The Boss: LLM routes to asset/code, injects PVSnesLib sprite code hints.
     """
     def __init__(self, api_key):
         self.api_key = api_key
@@ -17,48 +15,48 @@ class Orchestrator:
         self.generated_code = None
 
     def ask_llm(self, prompt):
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
-        data = {
-            "model": self.model,
-            "messages": [{"role": "user", "content": prompt}]
-        }
+        headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
+        data = {"model": self.model, "messages": [{"role": "user", "content": prompt}]}
         resp = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=data, timeout=120)
-        if resp.status_code == 200:
-            return resp.json()['choices'][0]['message']['content']
-        return None
+        return resp.json()['choices'][0]['message']['content'] if resp.status_code == 200 else None
 
     def execute_plan(self, user_prompt):
-        system_prompt = """You are SNES PVSnesLib expert. Output ONLY JSON.
-Statements must be separated by newlines or semicolons.
-{"action": "asset" or "code", "prompt": "detailed description", "details": "name or code comment"}
-For asset: generate pixel art sprite.
-For code: C89 code snippet for logic.
-State: """ + self.state.get_context()
-        full_prompt = system_prompt + "\nUser: " + user_prompt
-        resp = self.ask_llm(full_prompt)
-        print("[Boss] AI:", resp)
+        system_prompt = """PVSnesLib C89 Expert. Output ONLY JSON {"action": "asset"|"code", "prompt": "desc", "details": "name or note"}.
+
+Asset: pixel art sprite.
+Code: C89 PVSnesLib code. For sprite "knight": knight_tiles (gfx), knight_palette (pal). Use sprInit(), sprSetVram(knight_tiles, knight_palette), sprSet().""" + self.state.get_context()
+        full = system_prompt + "\nUser: " + user_prompt
+        resp = self.ask_llm(full)
+        print("[Boss] Response:", resp)
         try:
             task = json.loads(resp)
-            action = task["action"]
-            if action == "asset":
+            if task["action"] == "asset":
                 img = self.artist.generate_pixel_art(task["prompt"])
                 if img:
                     meta = self.artist.crunch_to_snes(img, task["details"])
                     self.state.add_asset(meta)
-            elif action == "code":
-                self.generated_code = task["details"]  # string code
+            else:
+                self.generated_code = task["details"]
         except:
-            self.generated_code = self.get_skeleton()
-
-    def get_skeleton(self):
-        return """#include <snes.h>
+            self.generated_code = """#include <snes.h>
+#include <snes/snes.h>  // Sprites
+extern const unsigned char knight_tiles[], knight_palette[];
 int main(void) {
   consoleInit();
+  sprInit();
+  sprSetVram(knight_tiles, knight_palette);
   while (1) {
+    sprSet();
     WaitForVBlank();
   }
   return 0;
 }"""
+
+    def get_skeleton(self):
+        return self.generated_code or """#include <snes.h>
+int main(void) {
+  consoleInit();
+  while(1) WaitForVBlank();
+  return 0;
+}"""
+
