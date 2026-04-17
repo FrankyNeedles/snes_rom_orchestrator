@@ -1,0 +1,46 @@
+# === 1. Security & Environment ===
+# Never commit your API keys or local settings
+.env
+.env.local
+
+# === 2. Python Clutter ===
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+# Virtual environments
+venv/
+.venv/
+env/
+
+# === 3. SNES Build Artifacts (The "Baking" residue) ===
+# We only want the .c and .h files, not the intermediate steps
+*.o
+*.obj
+*.sym
+*.map
+*.lst
+*.clp
+# The compiler often generates an ASM version of your C code
+*.asm
+
+# === 4. Output Factory ===
+# Ignore the final ROMs and build folders
+# Your AI will regenerate these in seconds anyway
+/build/
+*.sfc
+*.smc
+*.srm
+
+# === 5. Toolchain (Optional but Recommended) ===
+# Senior Tip: Don't commit the tools, commit a "setup" script.
+# If you want a small GitHub repo, uncomment these:
+# /devkitsnes/
+# /pvsneslib/
+# /emulators/
+
+# === 6. OS & IDE Clutter ===
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

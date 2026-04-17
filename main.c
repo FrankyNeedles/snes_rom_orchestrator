@@ -1,0 +1,1 @@
+/* We are not liable for any damages arising from the use of this product. */

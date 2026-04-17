@@ -1,0 +1,19 @@
+{
+    "project_info": {
+        "name": "Untitled SNES Project",
+        "version": "0.1"
+    },
+    "pillars": {
+        "actors": [
+            "Franky"
+        ],
+        "environment": {},
+        "mechanics": [],
+        "assets": [
+            "sword",
+            "knight_sword"
+        ],
+        "story_dialogue": []
+    },
+    "knowledge_base": []
+}

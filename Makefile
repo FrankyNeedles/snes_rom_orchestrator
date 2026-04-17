@@ -1,26 +1,51 @@
-# 1. SETUP PATHS
-DEV_KIT_DIR := ./devkitsnes
-LIB_DIR     := ./pvsneslib
+# -------------------------------------------------------------------
+# SNES ROM Orchestrator - Path-Sanitized Makefile
+# -------------------------------------------------------------------
 
-# 2. TOOLS
-CC      := $(DEV_KIT_DIR)/bin/816-tcc.exe
-LD      := $(DEV_KIT_DIR)/bin/wlalink.exe
+PVSNESLIB_HOME := pvsneslib
+DEVKITSNES     := devkitsnes
+BIN            := $(DEVKITSNES)/bin
 
-# 3. FOLDERS
-INCLUDE := -I$(LIB_DIR)/include -I$(DEV_KIT_DIR)/include
-TARGET  := build/game.sfc
+CC      := $(BIN)/816-tcc
+AS      := $(BIN)/wla-65816
+LD      := $(BIN)/wlalink
 
-# 4. THE RECIPE
-all: $(TARGET)
+ROMNAME := game
+BUILD   := build
+SOURCE  := main.c
 
-$(TARGET): mega_engine.o
-	@echo "Linking SNES ROM..."
-	$(LD) -vr temp.link $(TARGET) $(LIB_DIR)/lib/pvsneslib.lib
+# CFLAGS: -I tells tcc where C headers are
+CFLAGS  := -I$(PVSNESLIB_HOME)/include -Wall -c
 
-mega_engine.o: mega_engine.c
-	@echo "Compiling C code..."
-	$(CC) $(INCLUDE) -c mega_engine.c -o mega_engine.o
+# ASFLAGS: -I tells the assembler where assembly includes (.inc/.asm) are
+# We point it to the PVSnesLib include folder
+ASFLAGS := -v -I$(PVSNESLIB_HOME)/include -I.
+
+all: setup $(ROMNAME).sfc
+	@echo "------------------------------------------------"
+	@echo "FOUNDRY: ROM Baked successfully!"
+	@echo "------------------------------------------------"
+
+setup:
+	@if not exist $(BUILD) mkdir $(BUILD)
+
+# JUMP 1: C to Assembly
+$(BUILD)/main.asm: $(SOURCE)
+	@echo "Foundry: Performing Cross-Compilation..."
+	$(CC) $(CFLAGS) $(SOURCE) -o $@
+
+# JUMP 2: Assembly to Binary Object
+$(BUILD)/main.obj: $(BUILD)/main.asm
+	@echo "Foundry: Assembling Machine Code..."
+	$(AS) $(ASFLAGS) -o $@ $(BUILD)/main.asm
+
+# JUMP 3: Link Objects to ROM
+$(ROMNAME).sfc: $(BUILD)/main.obj
+	@echo "Foundry: Linking SNES Binary..."
+	@echo [objects] > $(BUILD)/link.txt
+	@echo $(BUILD)/main.obj >> $(BUILD)/link.txt
+	$(LD) -v -S $(BUILD)/link.txt $@
 
 clean:
-	@echo "Cleaning old files..."
-	-del /q *.o *.obj build\game.sfc 2>nul
+	@if exist $(BUILD) rd /s /q $(BUILD)
+	@if exist $(ROMNAME).sfc del $(ROMNAME).sfc
