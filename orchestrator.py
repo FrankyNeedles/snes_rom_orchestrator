@@ -2,7 +2,8 @@ import os
 import json
 import requests
 from asset_generator import SNESAssetGenerator
-from state_manager import SNESStateManager
+from state_manager import ProjectManager
+
 
 class SNESOrchestrator:
     """
@@ -12,7 +13,8 @@ class SNESOrchestrator:
     def __init__(self, api_key):
         self.api_key = api_key
         self.model = "anthropic/claude-3.5-sonnet" # The 'Smart' brain for logic
-        self.librarian = SNESStateManager()
+        self.librarian = ProjectManager("project_state.json")
+
         self.artist = SNESAssetGenerator(api_key=api_key)
         
     def ask_the_brain(self, user_prompt):

@@ -1,22 +1,31 @@
 import json
 import os
 
-class SNESStateManager:
+class ProjectManager:
     """
     The Librarian: Keeps track of the 5 Pillars (Assets, Actors, Mechanics, 
     Environment, Story). Ensures the AI never forgets what has been built.
     """
-    def __init__(self, state_file="snes_project_state.json"):
+    def __init__(self, state_file="project_state.json"):
+
         self.state_file = state_file
         # Initialize the 5 Pillars of the project
         self.state = {
-            "assets": {},      # Metadata for images/sounds
-            "actors": {},      # Characters, NPCs, Player stats
-            "environment": {}, # Map data, Tilemaps, Backgrounds
-            "mechanics": [],   # Rules (e.g., "Gravity is 5", "A = Jump")
-            "story": [],       # Dialogue, Quest progress
-            "compilation_history": [] # Logs of past "Bakes" and errors
+            "project_info": {
+                "name": "Untitled SNES Project",
+                "version": "0.1"
+            },
+            "pillars": {
+                "actors": [],
+                "environment": {},
+                "mechanics": [],
+                "assets": {},
+                "story_dialogue": []
+            },
+            "knowledge_base": [],
+            "compilation_history": []
         }
+
         self.load_state()
 
     def load_state(self):
@@ -35,8 +44,15 @@ class SNESStateManager:
     def update_asset(self, asset_metadata):
         """Registers a new physical asset into the project."""
         name = asset_metadata['name']
-        self.state['assets'][name] = asset_metadata
+        self.state['pillars']['assets'][name] = asset_metadata
         self.save_state()
+
+    def update_pillar(self, pillar, data):
+        """Update a specific pillar."""
+        if pillar in self.state['pillars']:
+            self.state['pillars'][pillar] = data
+            self.save_state()
+
 
     def add_mechanic(self, description):
         """Records a gameplay rule the AI must follow."""
